@@ -1,0 +1,96 @@
+from collections import deque
+
+# Simplified prototype building graph.
+# Connections must be verified against a real floor plan before real use.
+BUILDING_GRAPH = {
+    "Main Entrance": ["Reception", "North Corridor"],
+    "Reception": ["Main Entrance", "Classroom A", "Faculty Room"],
+    "Classroom A": ["Reception", "Classroom B", "Classroom C"],
+    "Classroom B": ["Classroom A", "North Corridor"],
+    "Classroom C": ["Classroom A", "Laboratory", "South Corridor"],
+    "Laboratory": ["Classroom C", "South Corridor"],
+    "Faculty Room": ["Reception", "North Corridor"],
+    "North Corridor": [
+        "Main Entrance", "Classroom B", "Faculty Room",
+        "East Staircase", "West Staircase"
+    ],
+    "South Corridor": [
+        "Classroom C", "Laboratory", "East Staircase",
+        "West Staircase"
+    ],
+    "East Staircase": ["North Corridor", "South Corridor", "Exit A"],
+    "West Staircase": ["North Corridor", "South Corridor", "Exit B"],
+    "Exit A": ["East Staircase", "Assembly Point A"],
+    "Exit B": ["West Staircase", "Assembly Point A"],
+    "Assembly Point A": [],
+}
+
+VALID_ZONES = set(BUILDING_GRAPH)
+EXITS = {"Exit A", "Exit B"}
+
+def scenario_hazards(scenario: str) -> set[str]:
+    hazards = {
+        "NORMAL": set(),
+        "RECOVERY": set(),
+        "ELEVATED_RISK": {"Classroom A"},
+        "FIRE": {"Laboratory", "Classroom A", "Classroom B"},
+        "SMOKE_SPREAD": {"Main Entrance", "North Corridor"},
+        "SENSOR_FAILURE": set(),
+        "GATEWAY_FAILURE": set(),
+        # Prototype assumption: Exit A is blocked in this scenario.
+        "BLOCKED_EXIT": {"Exit A"},
+        "MULTI_HAZARD": {
+            "Main Entrance", "Classroom A",
+            "Laboratory", "North Corridor"
+        },
+    }
+    return hazards.get(scenario, set())
+
+def find_evacuation_route(
+    start: str,
+    hazards: set[str],
+    blocked_exits: set[str] | None = None,
+) -> dict:
+    if start not in VALID_ZONES:
+        raise ValueError(f"Unknown starting zone: {start}")
+
+    blocked_exits = blocked_exits or set()
+    unavailable = (hazards | blocked_exits) - {start}
+
+    queue = deque([(start, [start])])
+    visited = {start}
+    candidates = []
+
+    while queue:
+        zone, path = queue.popleft()
+
+        if zone in EXITS and zone not in unavailable:
+            candidates.append(path)
+            continue
+
+        if zone == "Assembly Point A":
+            continue
+
+        for neighbour in BUILDING_GRAPH[zone]:
+            if neighbour in visited or neighbour in unavailable:
+                continue
+            visited.add(neighbour)
+            queue.append((neighbour, path + [neighbour]))
+
+    if not candidates:
+        return {
+            "available": False,
+            "route": [],
+            "message": "No route found in the prototype graph.",
+        }
+
+    candidates.sort(key=len)
+    route = candidates[0]
+
+    return {
+        "available": True,
+        "route": route,
+        "destination": route[-1],
+        "steps": len(route) - 1,
+        "message": "Prototype route calculated; verify conditions before use.",
+    }

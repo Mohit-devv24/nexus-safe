@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS-SAFE Command Center</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="brand">NEXUS-SAFE</div>
+    <div class="subtitle">Intelligent Emergency Command &amp; Control</div>
+  </div>
+  <div class="system-state">
+    <span id="connectionDot"></span>
+    <span id="connectionText">CONNECTING</span>
+  </div>
+</header>
+
+<main class="dashboard">
+  <section class="hero-grid">
+    <div class="panel">
+      <span class="label">SYSTEM STATUS</span>
+      <h1>MONITORING</h1>
+      <p>Digital Twin telemetry stream</p>
+    </div>
+    <div class="panel">
+      <span class="label">CURRENT RISK</span>
+      <div class="risk-value"><strong id="riskScore">0</strong><span>/ 100</span></div>
+      <div id="riskBand" class="risk-band">NORMAL</div>
+    </div>
+    <div class="panel">
+      <span class="label">ACTIVE SCENARIO</span>
+      <h2 id="scenario">NORMAL</h2>
+      <p id="zone">Waiting for telemetry...</p>
+    </div>
+  </section>
+
+  <section class="control-panel">
+    <div>
+      <span class="label">SIMULATION CONTROL</span>
+      <p>Run deterministic emergency scenarios.</p>
+    </div>
+    <div class="controls">
+      <select id="scenarioSelect"></select>
+      <button id="scenarioButton">ACTIVATE</button>
+    </div>
+  </section>
+
+  <section class="telemetry-grid">
+    <div class="panel metric"><span class="label">TEMPERATURE</span><strong id="temperature">--</strong><small> °C</small></div>
+    <div class="panel metric"><span class="label">SMOKE</span><strong id="smoke">--</strong><small> %</small></div>
+    <div class="panel metric"><span class="label">GAS</span><strong id="gas">--</strong><small> ppm</small></div>
+    <div class="panel metric"><span class="label">OCCUPANCY</span><strong id="occupancy">--</strong><small> people</small></div>
+  </section>
+
+  <section class="panel">
+    <span class="label">RISK EVIDENCE</span>
+    <div id="factors" class="factors">No risk factors detected.</div>
+  </section>
+
+  <section class="panel">
+    <span class="label">DIGITAL TWIN</span>
+    <div class="building">
+      <div class="zone-block" data-zone="Main Entrance">MAIN ENTRANCE</div>
+      <div class="zone-block" data-zone="Reception">RECEPTION</div>
+      <div class="zone-block" data-zone="Classroom A">CLASSROOM A</div>
+      <div class="zone-block" data-zone="Classroom B">CLASSROOM B</div>
+      <div class="zone-block" data-zone="Classroom C">CLASSROOM C</div>
+      <div class="zone-block" data-zone="Laboratory">LABORATORY</div>
+      <div class="zone-block" data-zone="Faculty Room">FACULTY</div>
+      <div class="zone-block" data-zone="North Corridor">NORTH CORRIDOR</div>
+      <div class="zone-block" data-zone="South Corridor">SOUTH CORRIDOR</div>
+      <div class="zone-block" data-zone="East Staircase">EAST STAIRCASE</div>
+      <div class="zone-block" data-zone="West Staircase">WEST STAIRCASE</div>
+      <div class="zone-block exit" data-zone="Exit A">EXIT A</div>
+      <div class="zone-block exit" data-zone="Exit B">EXIT B</div>
+      <div class="zone-block assembly" data-zone="Assembly Point A">ASSEMBLY POINT A</div>
+    </div>
+  </section>
+
+  <section class="panel evacuation-panel">
+    <span class="label">EVACUATION ROUTE</span>
+    <h2>Recommended Exit</h2>
+    <label for="routeStartZone">Starting zone</label>
+    <select id="routeStartZone">
+      <option>Main Entrance</option>
+      <option>Reception</option>
+      <option>Classroom A</option>
+      <option>Classroom B</option>
+      <option>Classroom C</option>
+      <option>Laboratory</option>
+      <option>Faculty Room</option>
+      <option>North Corridor</option>
+      <option>South Corridor</option>
+      <option>East Staircase</option>
+      <option>West Staircase</option>
+      <option>Exit A</option>
+      <option>Exit B</option>
+    </select>
+    <p id="routeStatus">Select a starting zone and calculate a route.</p>
+    <div id="routePath" class="route-path">No route calculated yet.</div>
+    <p id="routeDetails"></p>
+    <button id="routeButton" type="button">CALCULATE EVACUATION ROUTE</button>
+    <p class="route-notice">Simulation prototype only. Verify all routes and exit conditions before any real-world use.</p>
+  </section>
+
+  <section class="panel">
+    <span class="label">RISK ENGINE</span>
+    <div id="riskExplanation">Waiting for live telemetry...</div>
+  </section>
+</main>
+
+<script type="module" src="./js/app.js"></script>
+
+
+
+<script>
+(function () {
+  const panel = document.createElement("section");
+  panel.style.cssText =
+    "position:fixed;right:20px;bottom:20px;z-index:99999;" +
+    "background:#101827;color:white;padding:20px;border-radius:14px;" +
+    "border:1px solid #ef4444;max-width:320px;font-family:Arial";
+
+  panel.innerHTML = `
+    <h3 style="margin:0 0 10px;color:#ff7777">FIRE ALERT DEMO</h3>
+    <p style="font-size:13px">Automatic simulated fire notification.</p>
+    <button id="nexusFireTest" style="padding:11px;background:#dc2626;color:white;border:0;border-radius:7px;width:100%;cursor:pointer">SIMULATE FIRE</button>
+    <div id="nexusFireStatus" style="margin-top:12px;font-size:13px">Connecting to live telemetry...</div>
+  `;
+  document.body.appendChild(panel);
+
+  const status = document.getElementById("nexusFireStatus");
+  let announced = false;
+  let ws;
+
+  function announceFire() {
+    if (announced) return;
+    announced = true;
+    status.innerHTML = "FIRE DETECTED — DEMO ALERT<br>Phone call: SIMULATED<br>SMS: SIMULATED";
+
+    if ("speechSynthesis" in window) {
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(
+        "Nexus Safe fire alert demo. Fire scenario detected. Follow established emergency procedures."
+      ));
+    }
+  }
+
+  function connect() {
+    ws = new WebSocket("ws://127.0.0.1:8001/ws/live");
+
+    ws.onopen = () => {
+      status.textContent = "Live telemetry connected. Monitoring fire scenario...";
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        const scenario = payload.telemetry?.scenario;
+
+        if (scenario === "FIRE") announceFire();
+        else announced = false;
+      } catch (error) {
+        console.error("Telemetry parse error:", error);
+      }
+    };
+
+    ws.onerror = () => {
+      status.textContent = "Telemetry connection error. Check backend port 8001.";
+    };
+
+    ws.onclose = () => {
+      status.textContent = "Reconnecting to telemetry...";
+      setTimeout(connect, 2000);
+    };
+  }
+
+  document.getElementById("nexusFireTest").onclick = async () => {
+    status.textContent = "Activating FIRE simulation...";
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8001/api/simulation/scenario/FIRE",
+        { method: "POST" }
+      );
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      status.textContent = "FIRE activated. Waiting for telemetry...";
+    } catch (error) {
+      status.textContent = "Could not activate FIRE. Check backend.";
+      console.error(error);
+    }
+  };
+
+  connect();
+})();
+</script>
+</body>
+</html>
