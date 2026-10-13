@@ -150,7 +150,7 @@
   }
 
   function connect() {
-    ws = new WebSocket("ws://127.0.0.1:8001/ws/live");
+    ws = new WebSocket("wss://nexus-safe-api.onrender.com/ws/live");
 
     ws.onopen = () => {
       status.textContent = "Live telemetry connected. Monitoring fire scenario...";
@@ -182,7 +182,7 @@
     status.textContent = "Activating FIRE simulation...";
     try {
       const response = await fetch(
-        "http://127.0.0.1:8001/api/simulation/scenario/FIRE",
+        "https://nexus-safe-api.onrender.com/api/simulation/scenario/FIRE",
         { method: "POST" }
       );
       if (!response.ok) throw new Error("HTTP " + response.status);

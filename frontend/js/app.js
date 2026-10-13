@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8001";
+const API = "https://nexus-safe-api.onrender.com";
 const $=id=>document.getElementById(id);
 let latestTelemetry = null;
 let lastRouteKey = "";
@@ -159,7 +159,7 @@ function updateUI(payload){
 }
 
 function connect() {
-  const ws = new WebSocket("ws://127.0.0.1:8001/ws/live");
+  const ws = new WebSocket("wss://nexus-safe-api.onrender.com/ws/live");
 
   ws.onopen = () => {
     el.dot.style.background = "#52d273";
